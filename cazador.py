@@ -1,13 +1,11 @@
 import os
 import re
-import ssl
 import requests
 import cloudscraper
 import urllib3
 from bs4 import BeautifulSoup
 
-# Desactivar verificación de SSL a nivel de sistema Python
-ssl._create_default_https_context = ssl._create_unverified_context
+# Ocultar advertencias de SSL en los logs
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 URL_BOT_RAILWAY = os.getenv("URL_BOT_RAILWAY")
@@ -19,6 +17,7 @@ def obtener_tasa_bcv_bypass():
     try:
         print("🔍 Consultando la web del BCV usando cloudscraper...")
         
+        # 1. Creamos el scraper
         scraper = cloudscraper.create_scraper(
             browser={
                 'browser': 'chrome',
@@ -27,6 +26,16 @@ def obtener_tasa_bcv_bypass():
             }
         )
         
+        # 2. TRUCO SSL: Forzamos la sesión interna de requests a no verificar SSL
+        scraper.verify = False
+        
+        # 3. Desactivamos check_hostname en las conexiones HTTP internas
+        for adapter in scraper.adapters.values():
+            if hasattr(adapter, 'poolmanager'):
+                adapter.poolmanager.connection_pool_kw['assert_hostname'] = False
+                adapter.poolmanager.connection_pool_kw['cert_reqs'] = 'CERT_NONE'
+
+        # Petición limpia
         response = scraper.get(target_url, timeout=30)
         
         if response.status_code == 200:
@@ -86,6 +95,7 @@ if __name__ == "__main__":
     tasa, fecha = obtener_tasa_bcv_bypass()
     if tasa and fecha:
         notificar_al_bot(tasa, fecha)
+        
             
     
         
