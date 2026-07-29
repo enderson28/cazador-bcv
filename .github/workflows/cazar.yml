@@ -1,0 +1,33 @@
+name: Ejecutar El Cazador BCV
+
+on:
+  schedule:
+    # Se ejecuta cada 15 minutos entre las 4:00 PM y las 7:00 PM de Venezuela (20:00 a 23:00 UTC) de Lunes a Viernes
+    - cron: '*/15 20-23 * * 1-5'
+  workflow_dispatch: # Permite ejecutarlo manualmente con un botón en cualquier momento
+  
+jobs:
+  ejecutar-cazador:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Descargar código
+      uses: actions/checkout@v3
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Instalar dependencias
+      run: |
+        pip install -r requirements.txt
+
+    - name: Correr El Cazador
+      env:
+        API_KEY_SCRAPER: ${{ secrets.API_KEY_SCRAPER }}
+        URL_BOT_RAILWAY: ${{ secrets.URL_BOT_RAILWAY }}
+        CLAVE_SECRETA_BCV: ${{ secrets.CLAVE_SECRETA_BCV }}
+      run: |
+        python cazador.py
+        
