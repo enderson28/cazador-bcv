@@ -13,7 +13,9 @@ def obtener_tasa_bcv_bypass():
     try:
         print("🔍 Consultando la web del BCV usando cloudscraper...")
         
-        # Creamos el scraper capaz de sobrepasar protecciones anti-bot
+        # Ocultar alertas de SSL
+        requests.packages.urllib3.disable_warnings()
+
         scraper = cloudscraper.create_scraper(
             browser={
                 'browser': 'chrome',
@@ -22,7 +24,8 @@ def obtener_tasa_bcv_bypass():
             }
         )
         
-        response = scraper.get(target_url, timeout=30)
+        # Desactivamos verificación de certificado SSL
+        response = scraper.get(target_url, timeout=30, verify=False)
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -81,6 +84,7 @@ if __name__ == "__main__":
     tasa, fecha = obtener_tasa_bcv_bypass()
     if tasa and fecha:
         notificar_al_bot(tasa, fecha)
+        
         
         
               
