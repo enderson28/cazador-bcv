@@ -1,38 +1,43 @@
 import os
 import re
 import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 
-API_KEY_SCRAPER = os.getenv("API_KEY_SCRAPER")
 URL_BOT_RAILWAY = os.getenv("URL_BOT_RAILWAY")
 CLAVE_SECRETA_BCV = os.getenv("CLAVE_SECRETA_BCV")
 
 def obtener_tasa_bcv_bypass():
     target_url = "https://www.bcv.org.ve"
-    proxy_url = f"http://api.scraperapi.com?api_key={API_KEY_SCRAPER}&url={target_url}"
     
     try:
-        print("🔍 Consultando la web del BCV mediante proxy residencial...")
-        # Desactivamos verificación SSL por si el proxy entrega la respuesta del BCV directamente
-        response = requests.get(proxy_url, timeout=40, verify=False)
+        print("🔍 Consultando la web del BCV usando cloudscraper...")
+        
+        # Creamos el scraper capaz de sobrepasar protecciones anti-bot
+        scraper = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            }
+        )
+        
+        response = scraper.get(target_url, timeout=30)
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
             div_dolar = soup.find("div", id="dolar")
             
             if div_dolar:
-                # Buscamos la etiqueta <strong> donde vive el precio exacto
                 strong_tag = div_dolar.find("strong")
                 texto_tasa = strong_tag.text.strip() if strong_tag else div_dolar.text.strip()
                 
-                # Limpiamos comas y puntos
                 texto_limpio = texto_tasa.replace(',', '.')
                 match = re.search(r'\d+\.\d+', texto_limpio)
                 
                 if match:
                     tasa = float(match.group(0))
                     
-                    # Fecha oficial del BCV
                     span_fecha = soup.find("span", class_="date-display-single")
                     fecha = span_fecha.text.strip() if span_fecha else "Fecha no detectada"
                     
@@ -46,7 +51,7 @@ def obtener_tasa_bcv_bypass():
         return None, None
 
     except Exception as e:
-        print(f"❌ Error al conectar con el proxy: {e}")
+        print(f"❌ Error al consultar el BCV: {e}")
         return None, None
 
 def notificar_al_bot(tasa, fecha):
@@ -76,5 +81,6 @@ if __name__ == "__main__":
     tasa, fecha = obtener_tasa_bcv_bypass()
     if tasa and fecha:
         notificar_al_bot(tasa, fecha)
+        
         
               
