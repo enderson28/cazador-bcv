@@ -1,12 +1,8 @@
 import os
 import re
+import subprocess
 import requests
-import cloudscraper
-import urllib3
 from bs4 import BeautifulSoup
-
-# Ocultar advertencias de SSL en los logs
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 URL_BOT_RAILWAY = os.getenv("URL_BOT_RAILWAY")
 CLAVE_SECRETA_BCV = os.getenv("CLAVE_SECRETA_BCV")
@@ -15,31 +11,20 @@ def obtener_tasa_bcv_bypass():
     target_url = "https://www.bcv.org.ve"
     
     try:
-        print("🔍 Consultando la web del BCV usando cloudscraper...")
+        print("🔍 Consultando la web del BCV directamente vía curl (insecure)...")
         
-        # 1. Creamos el scraper
-        scraper = cloudscraper.create_scraper(
-            browser={
-                'browser': 'chrome',
-                'platform': 'windows',
-                'desktop': True
-            }
-        )
+        # Ejecutamos curl con -k (insecure) y User-Agent de navegador para saltar SSL y bloqueos
+        comando = [
+            "curl", "-s", "-k",
+            "-A", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            target_url
+        ]
         
-        # 2. TRUCO SSL: Forzamos la sesión interna de requests a no verificar SSL
-        scraper.verify = False
-        
-        # 3. Desactivamos check_hostname en las conexiones HTTP internas
-        for adapter in scraper.adapters.values():
-            if hasattr(adapter, 'poolmanager'):
-                adapter.poolmanager.connection_pool_kw['assert_hostname'] = False
-                adapter.poolmanager.connection_pool_kw['cert_reqs'] = 'CERT_NONE'
+        resultado = subprocess.run(comando, capture_output=True, text=True, timeout=30)
+        html_content = resultado.stdout
 
-        # Petición limpia
-        response = scraper.get(target_url, timeout=30)
-        
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
+        if html_content:
+            soup = BeautifulSoup(html_content, 'html.parser')
             div_dolar = soup.find("div", id="dolar")
             
             if div_dolar:
@@ -57,10 +42,12 @@ def obtener_tasa_bcv_bypass():
                     
                     print(f"✅ Tasa capturada con éxito: {tasa} Bs | Fecha: {fecha}")
                     return tasa, fecha
+                else:
+                    print("⚠️ No se pudo extraer el valor numérico de la tasa.")
             else:
                 print("⚠️ No se encontró la sección #dolar en la página.")
         else:
-            print(f"⚠️ La respuesta devolvió código HTTP: {response.status_code}")
+            print("⚠️ No se recibió contenido HTML de la página.")
             
         return None, None
 
@@ -95,6 +82,7 @@ if __name__ == "__main__":
     tasa, fecha = obtener_tasa_bcv_bypass()
     if tasa and fecha:
         notificar_al_bot(tasa, fecha)
+                
         
             
     
