@@ -71,8 +71,14 @@ def notificar_al_bot(tasa, fecha):
         res = requests.post(URL_BOT_RAILWAY, json=payload, timeout=10)
         
         if res.status_code == 200:
-            print("🔥 ¡Tasa enviada y actualizada con éxito en la memoria del bot!")
-        else:
+            datos_respuesta = res.json() if res.headers.get('content-type') == 'application/json' else {}
+            
+            # Si el webhook te responde que la tasa ya era la misma
+            if datos_respuesta.get("status") == "sin_cambios":
+                print("ℹ️ La tasa de hoy ya estaba registrada. Cazador finalizado sin cambios.")
+            else:
+                print("🔥 ¡Tasa enviada y actualizada con éxito en la memoria del bot!")
+        else:       
             print(f"❌ El bot rechazó la actualización. Respuesta: {res.status_code} - {res.text}")
 
     except Exception as e:
