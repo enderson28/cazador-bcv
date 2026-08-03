@@ -29,5 +29,5 @@ jobs:
         URL_BOT_RAILWAY: ${{ secrets.URL_BOT_RAILWAY }}
         CLAVE_SECRETA_BCV: ${{ secrets.CLAVE_SECRETA_BCV }}
       run: |
-        python cazador.py
+        python cazador.py 
         
