@@ -25,7 +25,7 @@ jobs:
 
     - name: Correr El Cazador
       env:
-        API_KEY_SCRAPER: ${{ secrets.API_KEY_SCRAPER }}
+        URL_BOT_RAILWAY_SECUNDARIO: ${{ secrets.URL_BOT_RAILWAY_SECUNDARIO }}
         URL_BOT_RAILWAY: ${{ secrets.URL_BOT_RAILWAY }}
         CLAVE_SECRETA_BCV: ${{ secrets.CLAVE_SECRETA_BCV }}
       run: |
