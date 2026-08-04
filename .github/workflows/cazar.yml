@@ -2,8 +2,8 @@ name: Ejecutar El Cazador BCV
 
 on:
   schedule:
-    # Se ejecuta cada 10 minutos entre las 3:30 PM y las 7:00 PM de Venezuela (19:30 a 23:00 UTC) de Lunes a Viernes
-    - cron: '*/10 19-23 * * 1-5'
+    # Se ejecuta en los minutos 3, 11, 19, 27, 35, 43, 51 (esquiva las horas en punto)
+    - cron: '3/8 19-23 * * 1-5'
   workflow_dispatch: # Permite ejecutarlo manualmente con un botón en cualquier momento
   
 jobs:
