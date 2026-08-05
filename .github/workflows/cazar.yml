@@ -30,4 +30,4 @@ jobs:
         CLAVE_SECRETA_BCV: ${{ secrets.CLAVE_SECRETA_BCV }}
       run: |
         python cazador.py 
-        
+
